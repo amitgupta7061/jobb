@@ -30,10 +30,13 @@ export function Sidebar() {
     setSyncing(true);
     try {
       await fetch("/api/collect", { method: "POST" });
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
     } catch {
       // ignore
     } finally {
-      setTimeout(() => setSyncing(false), 2000);
+      setSyncing(false);
     }
   };
 

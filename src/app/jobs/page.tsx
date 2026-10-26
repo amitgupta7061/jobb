@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, X, ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/jobs/JobCard";
@@ -30,6 +30,8 @@ function JobsPageContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [search, setSearch] = useState("");
@@ -37,6 +39,26 @@ function JobsPageContent() {
   const [roleLevel, setRoleLevel] = useState(searchParams.get("roleLevel") || "intern_or_fresher");
   const [locationScope, setLocationScope] = useState(searchParams.get("locationScope") || "india_or_remote");
   const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "score");
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch("/api/collect", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncMessage("All old jobs purged & fresh jobs synced!");
+        await fetchJobs();
+      } else {
+        setSyncMessage(data.error || "Sync encountered an issue.");
+      }
+    } catch (err: any) {
+      setSyncMessage(err.message || "Failed to trigger sync.");
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMessage(null), 4000);
+    }
+  };
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -96,32 +118,51 @@ function JobsPageContent() {
           </p>
         </div>
 
-        {/* View Switcher: Grid vs List */}
-        <div className="flex items-center rounded-lg border bg-card p-1 text-xs">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
-              viewMode === "grid"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            title="Grid View (more jobs on one page)"
+        {/* Controls: Sync Jobs & View Switcher */}
+        <div className="flex items-center gap-2">
+          {syncMessage && (
+            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
+              {syncMessage}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1.5 h-8 text-xs font-medium"
+            title="Purge all old listings and fetch fresh jobs from all company career portals"
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span>Grid View</span>
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors ${
-              viewMode === "list"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            title="List View"
-          >
-            <List className="h-3.5 w-3.5" />
-            <span>List View</span>
-          </button>
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} />
+            <span>{syncing ? "Purging & Syncing..." : "Sync Jobs"}</span>
+          </Button>
+
+          <div className="flex items-center rounded-lg border bg-card p-1 text-xs">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                viewMode === "grid"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Grid View (more jobs on one page)"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                viewMode === "list"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="List View"
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>List</span>
+            </button>
+          </div>
         </div>
       </div>
 

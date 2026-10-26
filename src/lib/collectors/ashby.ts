@@ -26,33 +26,34 @@ export class AshbyAdapter implements JobSourceAdapter {
   readonly sourceType = "ASHBY";
 
   async fetchJobs(boardId: string): Promise<NormalizedJob[]> {
-    const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(boardId)}`;
+    try {
+      const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(boardId)}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
-      },
-      body: JSON.stringify({ includeCompensation: false }),
-      cache: "no-store",
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
+        },
+        body: JSON.stringify({ includeCompensation: false }),
+        cache: "no-store",
+      });
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Ashby board "${boardId}" not found (404)`);
+      if (!response.ok) {
+        return [];
       }
-      throw new Error(`Ashby API error ${response.status}: ${response.statusText}`);
-    }
 
-    const data = (await response.json()) as AshbyResponse;
-    const jobs = data.jobs || data.results || [];
-    if (!Array.isArray(jobs)) {
+      const data = (await response.json()) as AshbyResponse;
+      const jobs = data.jobs || data.results || [];
+      if (!Array.isArray(jobs)) {
+        return [];
+      }
+
+      return jobs.map((job) => this.normalize(job, boardId));
+    } catch {
       return [];
     }
-
-    return jobs.map((job) => this.normalize(job, boardId));
   }
 
   private normalize(raw: AshbyJob, boardId: string): NormalizedJob {
