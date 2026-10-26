@@ -66,7 +66,9 @@ export class SmartRecruitersAdapter implements JobSourceAdapter {
       remoteRestrictions: null,
       employmentType,
       applicationUrl,
-      sourcePostedAt: raw.releasedDate ? new Date(raw.releasedDate) : undefined,
+      sourcePostedAt: raw.releasedDate ? new Date(raw.releasedDate) : null,
+      requiredSkills: [],
+      preferredSkills: [],
       rawData: {
         id: raw.id,
         refNumber: raw.refNumber,

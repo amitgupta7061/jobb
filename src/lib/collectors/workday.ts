@@ -93,7 +93,7 @@ export class WorkdayAdapter implements JobSourceAdapter {
       remoteRestrictions: isRemote ? locText : null,
       employmentType,
       applicationUrl,
-      sourcePostedAt: post.postedOn ? new Date() : undefined,
+      sourcePostedAt: post.postedOn ? new Date() : null,
       requiredSkills: [],
       preferredSkills: [],
       rawData: {

@@ -57,7 +57,9 @@ export class AmazonAdapter implements JobSourceAdapter {
       remoteRestrictions: null,
       employmentType,
       applicationUrl,
-      sourcePostedAt: raw.posted_date ? new Date(raw.posted_date) : undefined,
+      sourcePostedAt: raw.posted_date ? new Date(raw.posted_date) : null,
+      requiredSkills: [],
+      preferredSkills: [],
       rawData: {
         id: raw.id,
         id_icims: raw.id_icims,
