@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { updateProfileSchema } from "@/lib/validators";
 import { computeJobMatch } from "@/lib/matching/engine";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const profile = await prisma.userProfile.findFirst({

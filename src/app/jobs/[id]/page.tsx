@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -21,6 +21,18 @@ import { Button } from "@/components/ui/button";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 
 export default function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<div className="h-64 rounded-xl border bg-card/50 p-6 skeleton" />}>
+      <JobDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+function JobDetailContent({
   params,
 }: {
   params: Promise<{ id: string }>;

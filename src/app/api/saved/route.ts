@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { saveJobSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const profile = await prisma.userProfile.findFirst({

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runJobCollection } from "@/lib/collectors/orchestrator";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   try {
     // Check optional collection secret if configured
