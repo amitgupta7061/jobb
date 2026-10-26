@@ -15,16 +15,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let sourceId: string | undefined;
+    let targetSlug: string | undefined;
     try {
       const body = await request.json();
-      sourceId = body?.sourceId;
+      targetSlug = body?.companySlug || body?.targetSlug || body?.sourceId;
     } catch {
       // Body is optional
     }
 
     // Run collection
-    const result = await runJobCollection(sourceId);
+    const result = await runJobCollection(targetSlug);
 
     return NextResponse.json({
       success: true,

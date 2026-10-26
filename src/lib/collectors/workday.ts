@@ -26,39 +26,57 @@ export class WorkdayAdapter implements JobSourceAdapter {
     }
 
     const [tenant, instance, board] = parts;
-    const url = `https://${tenant}.${instance}.myworkdayjobs.com/wday/cxs/${tenant}/${board}/jobs`;
+    const baseUrl = `https://${tenant}.${instance}.myworkdayjobs.com/wday/cxs/${tenant}/${board}/jobs`;
+    const allJobs: NormalizedJob[] = [];
+    const PAGE_LIMIT = 20; // Workday CXS enforces a strict max of 20 per page
+    let offset = 0;
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
-        },
-        body: JSON.stringify({
-          appliedFacets: {},
-          limit: 100,
-          offset: 0,
-          searchText: "",
-        }),
-        cache: "no-store",
-      });
+      while (true) {
+        const response = await fetch(baseUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
+          },
+          body: JSON.stringify({
+            appliedFacets: {},
+            limit: PAGE_LIMIT,
+            offset,
+            searchText: "",
+          }),
+          cache: "no-store",
+        });
 
-      if (!response.ok) {
-        if (response.status === 404 || response.status === 422) {
-          return [];
+        if (!response.ok) {
+          if (response.status === 404 || response.status === 422) {
+            break;
+          }
+          throw new Error(`Workday API error ${response.status}: ${response.statusText}`);
         }
-        throw new Error(`Workday API error ${response.status}: ${response.statusText}`);
+
+        const data = await response.json();
+        const postings: WorkdayPosting[] = data.jobPostings || [];
+
+        if (postings.length === 0) break;
+
+        const normalized = postings.map((post) => this.normalize(post, tenant, instance, board));
+        allJobs.push(...normalized);
+
+        // If we got fewer than the limit, we've reached the last page
+        if (postings.length < PAGE_LIMIT) break;
+
+        offset += PAGE_LIMIT;
+
+        // Safety cap: don't fetch more than 500 jobs from a single tenant
+        if (offset >= 500) break;
       }
 
-      const data = await response.json();
-      const postings: WorkdayPosting[] = data.jobPostings || [];
-
-      return postings.map((post) => this.normalize(post, tenant, instance, board));
+      return allJobs;
     } catch (err: any) {
       console.error(`Error fetching Workday for ${tenant}:`, err.message);
-      return [];
+      return allJobs; // Return whatever we collected so far
     }
   }
 
@@ -93,7 +111,8 @@ export class WorkdayAdapter implements JobSourceAdapter {
       remoteRestrictions: isRemote ? locText : null,
       employmentType,
       applicationUrl,
-      sourcePostedAt: post.postedOn ? new Date() : null,
+      // postedOn is human-readable (e.g. "Posted 3 Days Ago"), not a parseable date
+      sourcePostedAt: null,
       requiredSkills: [],
       preferredSkills: [],
       rawData: {
@@ -102,6 +121,7 @@ export class WorkdayAdapter implements JobSourceAdapter {
         jobId,
         externalPath: post.externalPath,
         locationsText: locText,
+        postedOn: post.postedOn,
       },
     };
   }

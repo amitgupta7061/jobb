@@ -46,6 +46,11 @@ const TITLE_GROUPS: Record<string, string[]> = {
   "Data Engineer": [
     "data engineer", "data pipeline engineer", "etl engineer",
   ],
+  "AI Engineer": [
+    "ai engineer", "artificial intelligence engineer", "machine learning engineer",
+    "ml engineer", "genai engineer", "generative ai engineer", "ai/ml engineer",
+    "deep learning engineer", "applied ai engineer",
+  ],
 };
 
 // Non-technical roles to exclude
@@ -194,7 +199,7 @@ export function isEntryLevelRole(
   if (isInternshipTitle(title) || isNewGradTitle(title)) {
     return true;
   }
-  if (employmentType === "INTERNSHIP" && isInternshipTitle(title)) {
+  if (employmentType === "INTERNSHIP") {
     return true;
   }
 

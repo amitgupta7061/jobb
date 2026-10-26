@@ -148,17 +148,17 @@ export function isEligibleRemote(job: MatchInput): boolean {
   const isRemote = job.isRemote || combinedLoc.includes("remote");
   if (!isRemote) return false;
 
-  // The user requirement: "job should be either india and also if remote then india"
-  // If remote, it MUST be remote open to / based in India
+  // Remote explicitly mentioned with India
   const hasIndia = isJobInIndia(job);
   if (hasIndia) return true;
 
-  // If remote is explicitly bound to a foreign country (e.g. "Remote - US", "Remote - Ireland"), reject
+  // If remote is explicitly bound to a foreign country (e.g. "Remote - US", "Remote - Ireland", "EMEA"), reject
   if (FOREIGN_LOCATION_PATTERN.test(combinedLoc)) {
     return false;
   }
 
-  return false;
+  // Unrestricted / global remote (e.g., "Remote", "Remote - Global", "Anywhere") is eligible
+  return true;
 }
 
 /** Split "Bengaluru, India" or "Onsite in Bangalore" into tokens so exact array filters match. */

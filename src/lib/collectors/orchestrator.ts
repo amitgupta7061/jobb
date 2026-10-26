@@ -190,8 +190,30 @@ export async function runJobCollection(targetSlug?: string): Promise<CollectionR
         const locations = expandLocationTokens(normJob.locations);
         const normalizedTitle = normalizeTitle(normJob.title);
 
-        const jobRecord = await prisma.job.create({
-          data: {
+        const jobRecord = await prisma.job.upsert({
+          where: {
+            externalId_companyId: {
+              externalId: normJob.externalId,
+              companyId: company.id,
+            },
+          },
+          update: {
+            title: normJob.title,
+            normalizedTitle,
+            description: normJob.description,
+            descriptionHtml: normJob.descriptionHtml,
+            locations,
+            isRemote: normJob.isRemote,
+            remoteRestrictions: normJob.remoteRestrictions,
+            employmentType: normJob.employmentType,
+            applicationUrl: normJob.applicationUrl,
+            sourcePostedAt: normJob.sourcePostedAt,
+            lastSeenAt: now,
+            lastVerifiedAt: now,
+            listingStatus: "OPEN",
+            rawData: normJob.rawData as any,
+          },
+          create: {
             externalId: normJob.externalId,
             companyId: company.id,
             title: normJob.title,
@@ -238,8 +260,24 @@ export async function runJobCollection(targetSlug?: string): Promise<CollectionR
           }
         );
 
-        await prisma.jobMatch.create({
-          data: {
+        await prisma.jobMatch.upsert({
+          where: {
+            jobId: jobRecord.id,
+          },
+          update: {
+            profileId: profile.id,
+            overallScore: matchResult.overallScore,
+            matchCategory: matchResult.matchCategory,
+            gradScore: matchResult.gradScore,
+            roleScore: matchResult.roleScore,
+            skillScore: matchResult.skillScore,
+            locationScore: matchResult.locationScore,
+            experienceScore: matchResult.experienceScore,
+            matchReasons: matchResult.matchReasons,
+            missingSkills: matchResult.missingSkills,
+            concerns: matchResult.concerns,
+          },
+          create: {
             jobId: jobRecord.id,
             profileId: profile.id,
             overallScore: matchResult.overallScore,

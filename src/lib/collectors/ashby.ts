@@ -29,14 +29,12 @@ export class AshbyAdapter implements JobSourceAdapter {
     try {
       const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(boardId)}`;
 
-      const response = await fetch(url, {
-        method: "POST",
+      const response = await fetch(`${url}?includeCompensation=false`, {
+        method: "GET",
         headers: {
           Accept: "application/json",
-          "Content-Type": "application/json",
           "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
         },
-        body: JSON.stringify({ includeCompensation: false }),
         cache: "no-store",
       });
 

@@ -7,27 +7,54 @@ export class SmartRecruitersAdapter implements JobSourceAdapter {
   readonly sourceType = "CUSTOM";
 
   async fetchJobs(companyIdentifier: string): Promise<NormalizedJob[]> {
-    const url = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(companyIdentifier)}/postings?limit=100`;
+    const allJobs: NormalizedJob[] = [];
+    const PAGE_LIMIT = 100;
+    let offset = 0;
+    const MAX_PAGES = 10; // Safety cap to avoid infinite loops (up to 1,000 jobs)
 
-    const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
-      },
-      cache: "no-store",
-    });
+    try {
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const url = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(companyIdentifier)}/postings?limit=${PAGE_LIMIT}&offset=${offset}`;
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        return [];
+        const response = await fetch(url, {
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "JobRadar/1.0 (Personal Tech Job Discovery)",
+          },
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            break;
+          }
+          throw new Error(`SmartRecruiters API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const rawJobs = Array.isArray(data.content) ? data.content : [];
+        if (rawJobs.length === 0) {
+          break;
+        }
+
+        for (const raw of rawJobs) {
+          allJobs.push(this.normalize(raw, companyIdentifier));
+        }
+
+        offset += rawJobs.length;
+        if (typeof data.totalFound === "number" && offset >= data.totalFound) {
+          break;
+        }
+
+        if (rawJobs.length < PAGE_LIMIT) {
+          break;
+        }
       }
-      throw new Error(`SmartRecruiters API error: ${response.status} ${response.statusText}`);
+
+      return allJobs;
+    } catch {
+      return allJobs;
     }
-
-    const data = await response.json();
-    const rawJobs = Array.isArray(data.content) ? data.content : [];
-
-    return rawJobs.map((raw: any) => this.normalize(raw, companyIdentifier));
   }
 
   private normalize(raw: any, companyIdentifier: string): NormalizedJob {
@@ -48,7 +75,6 @@ export class SmartRecruitersAdapter implements JobSourceAdapter {
     if (
       typeId.includes("intern") ||
       expId.includes("intern") ||
-      expId.includes("entry") ||
       isInternshipTitle(title)
     ) {
       employmentType = "INTERNSHIP";

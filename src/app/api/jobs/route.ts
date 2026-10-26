@@ -87,12 +87,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 2. Strict Location Scope: MUST be India onsite/hybrid OR India Remote
-    if (locationScope !== "all") {
-      // Must have India in locations, title, or remoteRestrictions
+    // 2. Strict Location Scope: India onsite/hybrid OR Remote
+    if (locationScope === "remote") {
+      where.isRemote = true;
+    } else if (locationScope === "india") {
       where.AND.push({
         OR: [
           { locations: { hasSome: INDIA_CITIES } },
+          ...INDIA_CITIES.map((city) => ({
+            title: { contains: city, mode: "insensitive" as const },
+          })),
+          ...INDIA_CITIES.map((city) => ({
+            locations: { has: `Onsite in ${city}` },
+          })),
+        ],
+      });
+    } else if (locationScope === "india_or_remote") {
+      where.AND.push({
+        OR: [
+          { locations: { hasSome: INDIA_CITIES } },
+          { isRemote: true },
           { remoteRestrictions: { contains: "India", mode: "insensitive" } },
           ...INDIA_CITIES.map((city) => ({
             title: { contains: city, mode: "insensitive" as const },
@@ -102,7 +116,9 @@ export async function GET(request: NextRequest) {
           })),
         ],
       });
+    }
 
+    if (locationScope !== "all") {
       // Reject foreign remote/onsite explicitly pinned to non-India locations
       const FOREIGN_COUNTRIES = [
         "Remote - US", "Remote - Ireland", "Remote - Canada", "Remote - UK", "Remote - Germany",
