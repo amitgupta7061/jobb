@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
+  /* Core Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Semantic match colors */
+  --color-match-strong: var(--match-strong);
+  --color-match-possible: var(--match-possible);
+  --color-match-low: var(--match-low);
+  --color-match-ineligible: var(--match-ineligible);
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============ Light Theme ============ */
+:root {
+  --background: #fafbfc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #334155;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #ede9fe;
+  --accent-foreground: #4f46e5;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #6366f1;
+
+  --match-strong: #10b981;
+  --match-possible: #f59e0b;
+  --match-low: #94a3b8;
+  --match-ineligible: #ef4444;
+
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e2e8f0;
+}
+
+/* ============ Dark Theme ============ */
+.dark {
+  --background: #0b0f1a;
+  --foreground: #e2e8f0;
+  --card: #111827;
+  --card-foreground: #e2e8f0;
+  --popover: #111827;
+  --popover-foreground: #e2e8f0;
+  --primary: #818cf8;
+  --primary-foreground: #0f0a2a;
+  --secondary: #1e293b;
+  --secondary-foreground: #cbd5e1;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e1b4b;
+  --accent-foreground: #a5b4fc;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #818cf8;
+
+  --match-strong: #34d399;
+  --match-possible: #fbbf24;
+  --match-low: #64748b;
+  --match-ineligible: #f87171;
+
+  --sidebar-bg: #0f1629;
+  --sidebar-border: #1e293b;
+}
+
+/* ============ Base Styles ============ */
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 9999px;
+  opacity: 0.3;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
+}
+
+/* ============ Animations ============ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ============ Skeleton Loading ============ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--secondary) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ============ Score Ring ============ */
+.score-ring {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease-out;
+}
+
+/* ============ Job Description Content ============ */
+.job-description h1,
+.job-description h2,
+.job-description h3 {
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.job-description ul,
+.job-description ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.job-description li {
+  margin: 0.25em 0;
+}
+
+.job-description p {
+  margin: 0.5em 0;
+  line-height: 1.6;
+}
+
+.job-description a {
+  color: var(--primary);
+  text-decoration: underline;
 }

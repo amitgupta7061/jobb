@@ -1,0 +1,276 @@
+// Job Radar - Complete Database Schema
+// All entities for job discovery, matching, and application tracking
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ User Profile ============
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  degree          String   @default("B.Tech in Computer Science and Engineering")
+  graduationYear  Int      @default(2027)
+  currentRole     String?
+  currentCompany  String?
+  targetRoles     String[] @default([])
+  employmentTypes String[] @default([])
+  skills          String[] @default([])
+  minExperience   Int      @default(0)
+  maxExperience   Int      @default(1)
+  locations       String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  matches      JobMatch[]
+  savedJobs    SavedJob[]
+  applications Application[]
+
+  @@map("user_profiles")
+}
+
+// ============ Company Registry ============
+
+model Company {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  websiteUrl      String?
+  careersUrl      String?
+  logoUrl         String?
+  atsType         AtsType   @default(NONE)
+  atsBoardId      String?
+  isActive        Boolean   @default(true)
+  priority        Int       @default(3) // 1=highest, 5=lowest
+  lastCollectedAt DateTime?
+  lastSuccessAt   DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  jobs           Job[]
+  jobSources     JobSource[]
+  collectionRuns CollectionRun[]
+
+  @@index([isActive])
+  @@index([atsType])
+  @@map("companies")
+}
+
+enum AtsType {
+  GREENHOUSE
+  LEVER
+  ASHBY
+  WORKDAY
+  CUSTOM
+  NONE
+}
+
+// ============ Job Source ============
+
+model JobSource {
+  id              String    @id @default(cuid())
+  companyId       String
+  sourceType      AtsType
+  sourceUrl       String?
+  boardIdentifier String?
+  isActive        Boolean   @default(true)
+  lastFetchedAt   DateTime?
+  lastSuccessAt   DateTime?
+  failureCount    Int       @default(0)
+  lastError       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobs           Job[]
+  collectionRuns CollectionRun[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("job_sources")
+}
+
+// ============ Job ============
+
+model Job {
+  id                String        @id @default(cuid())
+  externalId        String
+  companyId         String
+  sourceId          String?
+  title             String
+  normalizedTitle   String?
+  description       String?
+  descriptionHtml   String?
+  locations         String[]      @default([])
+  isRemote          Boolean       @default(false)
+  remoteRestrictions String?
+  employmentType    EmploymentType @default(UNKNOWN)
+  experienceMin     Int?
+  experienceMax     Int?
+  requiredSkills    String[]      @default([])
+  preferredSkills   String[]      @default([])
+  eligibleGradYears Int[]         @default([])
+  degreeRequirements String?
+  applicationUrl    String
+  sourcePostedAt    DateTime?
+  firstSeenAt       DateTime      @default(now())
+  lastSeenAt        DateTime      @default(now())
+  lastVerifiedAt    DateTime?
+  listingStatus     ListingStatus @default(OPEN)
+  rawData           Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source       JobSource?    @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  match        JobMatch?
+  savedJobs    SavedJob[]
+  applications Application[]
+
+  @@unique([externalId, companyId])
+  @@index([companyId])
+  @@index([listingStatus])
+  @@index([employmentType])
+  @@index([firstSeenAt])
+  @@index([sourcePostedAt])
+  @@index([title])
+  @@map("jobs")
+}
+
+enum EmploymentType {
+  INTERNSHIP
+  FULL_TIME
+  CONTRACT
+  UNKNOWN
+}
+
+enum ListingStatus {
+  OPEN
+  CLOSED
+  UNVERIFIED
+  STALE
+}
+
+// ============ Job Match ============
+
+model JobMatch {
+  id             String        @id @default(cuid())
+  jobId          String        @unique
+  profileId      String
+  overallScore   Int           @default(0)
+  matchCategory  MatchCategory @default(NEEDS_REVIEW)
+  gradScore      Int           @default(0)
+  roleScore      Int           @default(0)
+  skillScore     Int           @default(0)
+  locationScore  Int           @default(0)
+  experienceScore Int          @default(0)
+  matchReasons   String[]      @default([])
+  missingSkills  String[]      @default([])
+  concerns       String[]      @default([])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  job     Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  profile UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([overallScore])
+  @@index([matchCategory])
+  @@map("job_matches")
+}
+
+enum MatchCategory {
+  STRONG
+  POSSIBLE
+  LOW
+  INELIGIBLE
+  NEEDS_REVIEW
+}
+
+// ============ Saved Job ============
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  jobId     String
+  profileId String
+  savedAt   DateTime @default(now())
+
+  job     Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  profile UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, profileId])
+  @@index([profileId])
+  @@map("saved_jobs")
+}
+
+// ============ Application ============
+
+model Application {
+  id           String            @id @default(cuid())
+  jobId        String
+  profileId    String
+  status       ApplicationStatus @default(SAVED)
+  appliedAt    DateTime?
+  notes        String?
+  followUpDate DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  job     Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  profile UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, profileId])
+  @@index([profileId])
+  @@index([status])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  ONLINE_ASSESSMENT
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+// ============ Collection Run ============
+
+model CollectionRun {
+  id            String              @id @default(cuid())
+  companyId     String
+  sourceId      String?
+  startedAt     DateTime            @default(now())
+  completedAt   DateTime?
+  status        CollectionRunStatus @default(RUNNING)
+  jobsFound     Int                 @default(0)
+  jobsCreated   Int                 @default(0)
+  jobsUpdated   Int                 @default(0)
+  jobsUnchanged Int                 @default(0)
+  errors        Json?
+  durationMs    Int?
+
+  company Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source  JobSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([startedAt])
+  @@index([status])
+  @@map("collection_runs")
+}
+
+enum CollectionRunStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}

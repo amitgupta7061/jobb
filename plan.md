@@ -267,40 +267,40 @@ Map equivalent titles: SDE ↔ Software Engineer ↔ Software Development Engine
 - [x] Set up shadcn/ui
 
 ### Phase 2: Core UI
-- [ ] Root layout with sidebar navigation
-- [ ] Dashboard page with stats
-- [ ] Settings page (profile editor)
-- [ ] Jobs listing page with filters
-- [ ] Job detail page
+- [x] Root layout with sidebar navigation
+- [x] Dashboard page with stats
+- [x] Settings page (profile editor)
+- [x] Jobs listing page with filters
+- [x] Job detail page
 
 ### Phase 3: Collection Pipeline
-- [ ] Base adapter interface
-- [ ] Greenhouse adapter
-- [ ] Lever adapter  
-- [ ] Ashby adapter
-- [ ] Collection orchestrator
-- [ ] Manual trigger API
+- [x] Base adapter interface
+- [x] Greenhouse adapter
+- [x] Lever adapter  
+- [x] Ashby adapter
+- [x] Collection orchestrator
+- [x] Manual trigger API
 
 ### Phase 4: Matching Engine
-- [ ] Title normalization
-- [ ] Eligibility rules
-- [ ] Score calculator
-- [ ] Match categorization
-- [ ] Bulk match recalculation
+- [x] Title normalization
+- [x] Eligibility rules
+- [x] Score calculator
+- [x] Match categorization
+- [x] Bulk match recalculation
 
 ### Phase 5: Application Tracking
-- [ ] Save/unsave API + UI
-- [ ] Application CRUD API + UI
-- [ ] Status workflow
-- [ ] Notes and follow-ups
+- [x] Save/unsave API + UI
+- [x] Application CRUD API + UI
+- [x] Status workflow
+- [x] Notes and follow-ups
 
 ### Phase 6: Polish & Deploy
-- [ ] Search & filtering (full)
-- [ ] Health monitoring dashboard
-- [ ] GitHub Actions schedule
-- [ ] Tests (Vitest)
-- [ ] README + deployment docs
-- [ ] .env.example + docker-compose
+- [x] Search & filtering (full)
+- [x] Health monitoring dashboard
+- [x] GitHub Actions schedule
+- [x] Tests (Vitest / node:test)
+- [x] README + deployment docs
+- [x] .env.example + docker-compose
 
 ---
 

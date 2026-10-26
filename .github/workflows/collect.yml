@@ -1,0 +1,23 @@
+name: Scheduled Job Radar Sync
+
+on:
+  schedule:
+    # Run twice daily at 06:00 and 18:00 UTC (11:30 and 23:30 IST)
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+    # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  collect-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Job Radar Sync Endpoint
+        env:
+          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
+          COLLECTION_SECRET: ${{ secrets.COLLECTION_SECRET }}
+        run: |
+          echo "Triggering Job Radar collection pipeline..."
+          curl -X POST "${APP_URL}/api/collect" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${COLLECTION_SECRET}" \
+            --fail --silent --show-error
